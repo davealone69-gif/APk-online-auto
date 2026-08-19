@@ -1,0 +1,6 @@
+{
+  "name": "Everything4Droid IDE",
+  "description": "An interactive, browser-based Android development environment with an embedded code editor, layouts simulator, emulator runtime, live logcat, build pipeline, and AI-assisted programming.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
