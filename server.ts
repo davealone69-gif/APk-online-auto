@@ -2,54 +2,40 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI } from "@google/genai";
+import { Ollama } from "ollama";
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = 3000;
-
 app.use(express.json());
 
-// Initialize Gemini SDK with telemetry User-Agent header
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: {
-    headers: {
-      "User-Agent": "aistudio-build",
-    },
-  },
-});
+const ollama = new Ollama();
 
 // AI Coding Copilot endpoint
 app.post("/api/copilot", async (req, res) => {
   try {
-    const { prompt, systemInstruction, model = "gemini-3.5-flash", temperature = 0.2 } = req.body;
+    const { prompt, systemInstruction, model = "llama3.2", temperature = 0.2 } = req.body;
 
     if (!prompt) {
       return res.status(400).json({ error: "Prompt is required" });
     }
 
-    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY") {
-      // Graceful error if API key is not configured yet
-      return res.json({
-        text: "## API Key Missing\n\nI can see you're trying to use the AI Copilot. To enable AI features, please configure your **GEMINI_API_KEY** in the **Settings > Secrets** panel in AI Studio. Once configured, I will be fully functional to generate, refactor, and debug Android code!",
-      });
-    }
-
-    const response = await ai.models.generateContent({
+    const response = await ollama.chat({
       model: model,
-      contents: prompt,
-      config: {
-        systemInstruction: systemInstruction || "You are an expert Android developer and AI Coding Copilot for Everything4Droid IDE.",
+      messages: [
+        { role: "system", content: systemInstruction || "You are an expert Android developer and AI Coding Copilot for Everything4Droid IDE." },
+        { role: "user", content: prompt }
+      ],
+      options: {
         temperature: temperature,
-      },
+      }
     });
 
-    res.json({ text: response.text });
+    res.json({ text: response.message.content });
   } catch (error: any) {
-    console.error("Gemini API error:", error);
+    console.error("Ollama API error:", error);
     res.status(500).json({ error: error?.message || "Internal server error" });
   }
 });
@@ -62,10 +48,9 @@ app.post("/api/github/analyze", async (req, res) => {
       return res.status(400).json({ error: "Repository URL is required" });
     }
 
-    // Call Gemini to analyze the repository structure and content
+    // Call Ollama to analyze the repository structure and content
     const prompt = `Analyze this simulated Android repository: ${repoUrl}.
 Files present: ${JSON.stringify(files || [])}
-
 Provide a structured, highly professional analysis in JSON format with:
 - "detectedType": "Kotlin DSL" or "Groovy Gradle"
 - "packageName": detected package name (e.g. com.example.app)
@@ -74,32 +59,13 @@ Provide a structured, highly professional analysis in JSON format with:
 - "components": list of main components (Activities, Services, etc.)
 - "suggestions": list of 3 project improvement suggestions or dependencies to add`;
 
-    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY") {
-      return res.json({
-        analysis: {
-          detectedType: "Kotlin DSL",
-          packageName: "com.everything4droid.app",
-          minSdkVersion: 26,
-          targetSdkVersion: 34,
-          components: ["MainActivity (Kotlin)", "MainViewModel", "activity_main.xml"],
-          suggestions: [
-            "Add Jetpack Compose for modern declarative UI.",
-            "Integrate Hilt for dependency injection.",
-            "Update Android Gradle Plugin (AGP) to latest stable version."
-          ]
-        }
-      });
-    }
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-      },
+    const response = await ollama.chat({
+      model: "llama3.2",
+      messages: [{ role: "user", content: prompt }],
+      format: "json",
     });
 
-    const result = JSON.parse(response.text || "{}");
+    const result = JSON.parse(response.message.content || "{}");
     res.json({ analysis: result });
   } catch (error: any) {
     console.error("Repo analysis error:", error);
@@ -112,10 +78,6 @@ app.post("/api/repair", async (req, res) => {
   try {
     const { logs, projectTree, knowledgeBase } = req.body;
     
-    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY") {
-      return res.status(400).json({ error: "Gemini API Key missing for auto-repair." });
-    }
-
     const prompt = `
 You are an expert Android Build System engineer. A GitHub Actions Gradle build just failed.
 Here is the raw error log:
@@ -146,16 +108,16 @@ Return a JSON object matching this schema:
 Ensure the newContent is the FULL, updated file content, not just a patch.
 `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
+    const response = await ollama.chat({
+      model: "llama3.2",
+      messages: [{ role: "user", content: prompt }],
+      format: "json",
+      options: {
         temperature: 0.1,
-      },
+      }
     });
 
-    const result = JSON.parse(response.text || "{}");
+    const result = JSON.parse(response.message.content || "{}");
     res.json(result);
   } catch (error: any) {
     console.error("Auto-repair error:", error);

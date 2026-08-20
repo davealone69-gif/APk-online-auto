@@ -1,6 +1,6 @@
 import { useState, useTransition } from "react";
-import { Folder, FolderOpen, File, Plus, Trash2, Smartphone, Terminal, Github, RefreshCw, Layers, Key, Check, Info, AlertTriangle, FileCode } from "lucide-react";
-import { FileNode, ADBDevice, EditorTab } from "../types";
+import { Folder, FolderOpen, File, Plus, Trash2, Smartphone, Terminal, Github, RefreshCw, Layers, Key, Check, Info, AlertTriangle, FileCode, Settings } from "lucide-react";
+import { FileNode, ADBDevice, EditorTab, OllamaConfig } from "../types";
 
 interface SidebarProps {
   projectTree: FileNode;
@@ -17,6 +17,8 @@ interface SidebarProps {
   onGenerateDesc: (repoUrl: string) => void;
   githubToken: string;
   onSetGithubToken: (token: string) => void;
+  ollamaConfig: OllamaConfig;
+  onSetOllamaConfig: (config: OllamaConfig) => void;
 }
 
 export default function Sidebar({
@@ -33,8 +35,10 @@ export default function Sidebar({
   onGenerateDesc,
   githubToken,
   onSetGithubToken,
+  ollamaConfig,
+  onSetOllamaConfig,
 }: SidebarProps) {
-  const [activePanel, setActivePanel] = useState<"explorer" | "adb" | "github">("explorer");
+  const [activePanel, setActivePanel] = useState<"explorer" | "adb" | "github" | "settings">("explorer");
 
   // File Explorer helper states
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({

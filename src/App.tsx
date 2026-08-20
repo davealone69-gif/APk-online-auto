@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Layers, Bot, Smartphone, Terminal, Github, Sparkles, Code, Play, RefreshCw, Cpu } from "lucide-react";
-import { FileNode, EditorTab, Diagnostic, ADBDevice, LogLine, GradleDependency } from "./types";
+import { FileNode, EditorTab, Diagnostic, ADBDevice, LogLine, GradleDependency, OllamaConfig } from "./types";
 import { initialProjectTree } from "./initialProject";
 import Sidebar from "./components/Sidebar";
 import EditorArea from "./components/EditorArea";
@@ -35,6 +35,23 @@ export default function App() {
     return localStorage.getItem("e4d_githubToken") || "";
   });
   const [apkDownloadUrl, setApkDownloadUrl] = useState<string | null>(null);
+
+  // Ollama Config State
+  const [ollamaConfig, setOllamaConfig] = useState<OllamaConfig>(() => {
+    const saved = localStorage.getItem("e4d_ollamaConfig");
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return {
+      baseUrl: "http://127.0.0.1:11434",
+      model: "llama3.2",
+      systemPrompt: "You are an expert Android developer and AI Coding Copilot for Everything4Droid IDE."
+    };
+  });
+
+  useEffect(() => {
+    localStorage.setItem("e4d_ollamaConfig", JSON.stringify(ollamaConfig));
+  }, [ollamaConfig]);
   
   // Auto Repair State
   const [autoRepairMode, setAutoRepairMode] = useState<boolean>(false);
@@ -375,7 +392,8 @@ export default function App() {
               body: JSON.stringify({
                 logs: failedLogs,
                 projectTree: currentProjectTree,
-                knowledgeBase
+                knowledgeBase,
+                ollamaConfig
               })
             });
             const repairData = await repairRes.json();
@@ -593,6 +611,8 @@ export default function App() {
             onGenerateDesc={handleGenerateDesc}
             githubToken={githubToken}
             onSetGithubToken={setGithubToken}
+            ollamaConfig={ollamaConfig}
+            onSetOllamaConfig={setOllamaConfig}
           />
         </section>
 

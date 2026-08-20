@@ -46,7 +46,7 @@ export default function CopilotPanel({
     setInputValue("");
     setLoading(true);
 
-    onLogcatEmit("AICopilot", `Prompting Gemini: "${textToSend.substring(0, 40)}..."`, "I");
+    onLogcatEmit("AICopilot", `Prompting Ollama: "${textToSend.substring(0, 40)}..."`, "I");
 
     // Gather active file context
     let promptWithContext = textToSend;
@@ -84,7 +84,7 @@ export default function CopilotPanel({
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         };
         setMessages((prev) => [...prev, aiMsg]);
-        onLogcatEmit("AICopilot", "Received assistance response from Gemini.", "D");
+        onLogcatEmit("AICopilot", "Received assistance response from Ollama.", "D");
       } else {
         throw new Error(data.error || "Failed to generate copilot response");
       }

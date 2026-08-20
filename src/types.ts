@@ -14,6 +14,12 @@ export interface EditorTab {
   language: "kotlin" | "java" | "xml" | "gradle" | "json" | "markdown";
 }
 
+export interface OllamaConfig {
+  baseUrl: string;
+  model: string;
+  systemPrompt: string;
+}
+
 export interface Diagnostic {
   line: number;
   message: string;

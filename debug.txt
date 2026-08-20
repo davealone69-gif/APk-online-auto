@@ -1,0 +1,12 @@
+
+// Auto-Repair AI endpoint
+app.post("/api/repair", async (req, res) => {
+  try {
+    const { logs, projectTree, knowledgeBase } = req.body;
+    
+    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY") {
+      return res.status(400).json({ error: "Gemini API Key missing for auto-repair." });
+    }
+
+    const prompt = `
+You are an expert Android Build System engineer. A GitHub Actions Gradle build just failed.
